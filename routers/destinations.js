@@ -1,5 +1,5 @@
 const express = require('express')
-const { getDestinations, getDestination } = require('../controllers/destinations')
+const { getDestinations, getDestination, createDestination } = require('../controllers/destinations')
 
 const router = express.Router();
 
