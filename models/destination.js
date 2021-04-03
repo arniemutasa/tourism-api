@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const slugify = require('slugify')
+const geocoder = require('../utils/geocoder')
 
 
 const destinationSchema = new mongoose.Schema({
@@ -39,6 +40,7 @@ const destinationSchema = new mongoose.Schema({
         },
         coordinates: {
             type: [Number],
+            index: '2dsphere'
         },
         formattedAddress: {
             type: String
@@ -47,6 +49,12 @@ const destinationSchema = new mongoose.Schema({
             type: String
         },
         city: {
+            type: String
+        },
+        state: {
+            type: String
+        },
+        zipcode: {
             type: String
         },
         country: {
@@ -63,6 +71,10 @@ const destinationSchema = new mongoose.Schema({
             type: String
         }
     ],
+
+    averageActivityCost: {
+        type: Number
+    },
 
     rating: {
         type: Number,
@@ -84,7 +96,18 @@ destinationSchema.virtual('id').get(function(){
     return this._id.toHexString()
 })
 
+destinationSchema.virtual('activities',{
+    ref: 'Activity',
+    localField: '_id',
+    foreignField: 'destination',
+    justOne: false
+})
+
 destinationSchema.set('toJSON', {
+    virtuals: true,
+})
+
+destinationSchema.set('toObject', {
     virtuals: true,
 })
 
@@ -93,5 +116,26 @@ destinationSchema.pre('save', function(next){
     this.slug = slugify(this.name, {lower: true})
     next()
 })
+
+
+// Create location
+destinationSchema.pre('save', async function(next){
+    const loc = await geocoder.geocode(this.address)
+
+    this.location = {
+        type: 'Point',
+        coordinates: [loc[0].longitude, loc[0].latitude],
+        formattedAddress: loc[0].formattedAddress,
+        street: loc[0].streetName,
+        city: loc[0].city,
+        state: loc[0].stateCode,
+        zipcode: loc[0].zipCode,
+        country: loc[0].countryCode
+    }
+
+    next()
+})
+
+
 
 module.exports = mongoose.model('Destination', destinationSchema)

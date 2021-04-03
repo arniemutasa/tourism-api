@@ -8,6 +8,7 @@ const errorHandler = require('./middleware/error')
 //Routers
 const destinations = require('./routers/destinations')
 const categories = require('./routers/categories')
+const activities = require('./routers/activities')
 
 
 // Load environment variables
@@ -26,6 +27,7 @@ app.use(express.json())
 //Mount Routers
 app.use('/api/v1/destinations', destinations)
 app.use('/api/v1/categories', categories)
+app.use('/api/v1/activities', activities)
 
 
 //Middleware

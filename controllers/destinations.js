@@ -1,3 +1,4 @@
+const geocoder = require('../utils/geocoder')
 const Destination = require('../models/destination')
 const mongoose = require('mongoose')
 const ErrorResponse = require('../utils/errorResponse')
@@ -17,7 +18,7 @@ exports.getDestinations = async (req, res, next) => {
     }
 
     try {
-        const destinations = await Destination.find(filter).populate('category')
+        const destinations = await Destination.find(filter).populate('category activities')
         res.status(200)
         .json({
             success: true,
@@ -35,7 +36,7 @@ exports.getDestination = async (req, res, next) => {
 
 
     try {
-        const destination = await Destination.findById(req.params.id).populate('category')
+        const destination = await Destination.findById(req.params.id).populate('category activities')
 
         if(!destination){
             return next(new ErrorResponse(`Destination not found`, 404))
@@ -63,7 +64,7 @@ exports.createDestination = async (req, res, next) => {
         const destination = await Destination.create(req.body)
         res.status(201).json({success: true, data: destination})
     }catch(err){
-        res.status(400).json({success: false})
+        res.status(400).json({success: false, data: err})
     }
     
 }
@@ -126,6 +127,39 @@ exports.updateDestination = async (req, res, next) => {
     }catch(err){
         return res.status(500).json({success: false, message: 'Destination Update Failed'})
     }
+    
+}
+
+
+
+// Get destinations within a radius
+// GET /api/v1/destinations/radius/:city/:distance
+// PUBLIC ACCESS
+exports.getDestinationsWithinRadius = async (req, res, next) => {
+
+    const {city, distance} = req.params
+
+    //Get latitude and longitude from geocoder
+    const loc = await geocoder.geocode(city)
+    const lat = loc[0].latitude
+    const lng = loc[0].longitude
+
+
+    //Calculate radius using radians
+    const radius = distance / 6378
+
+    const destinations = await Destination.find({
+        location: {
+            $geoWithin: {$centerSphere: [[lng, lat],radius]}
+        }
+    })
+
+    res.status(200).json({
+        success: true,
+        count: destinations.length,
+        data: destinations
+    })
+
     
 }
 
