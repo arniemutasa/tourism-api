@@ -40,7 +40,7 @@ exports.getActivities = async (req, res, next) => {
 // GET /api/v1/activites/:id
 // Public Access
 exports.getActivity = async (req, res, next) => {
-    const activity = await Activity.findById(req.params.id).populate('Destination')
+    const activity = await Activity.findById(req.params.id).populate('destination')
     if(!activity){
         return res.status('400').json({
             success: false,

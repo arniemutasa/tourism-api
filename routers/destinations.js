@@ -1,5 +1,5 @@
 const express = require('express')
-const { getDestinations, getDestination, createDestination, getDestinationsWithinRadius } = require('../controllers/destinations')
+const { getDestinations, getDestination, createDestination, getDestinationsWithinRadius, uploadDestinationPhoto } = require('../controllers/destinations')
 
 //Include Activities router for fetching activities belonging to destination
 const activitiesRouter = require('./activities')
@@ -19,6 +19,8 @@ router.route('/:id').get(getDestination)
 
 
 router.route('/radius/:city/:distance').get(getDestinationsWithinRadius)
+
+router.route('/:id/photo').put(uploadDestinationPhoto)
 
 
 

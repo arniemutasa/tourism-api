@@ -1,3 +1,4 @@
+const path = require('path')
 const geocoder = require('../utils/geocoder')
 const Destination = require('../models/destination')
 const mongoose = require('mongoose')
@@ -81,7 +82,7 @@ exports.deleteDestination = async (req, res, next) => {
     try{
         const destination = await Destination.findByIdAndRemove(req.params.id)
 
-        if(!product){
+        if(!destination){
             return res.status(404).send('could not delete destination')
         } else {
             return res.status(201).json({success: true, data: destination})
@@ -159,6 +160,69 @@ exports.getDestinationsWithinRadius = async (req, res, next) => {
         count: destinations.length,
         data: destinations
     })
+
+    
+}
+
+
+// Upload destination photo
+// PUT /api/v1/destinations/:id/photo
+// ADMIN ACCESS
+exports.uploadDestinationPhoto = async (req, res, next) => {
+
+    const destination = await Destination.findById(req.params.id)
+
+    if(!destination){
+        return res.status(404).send('destination not found')
+    }
+
+    if(!req.files){
+        return res.status(400).json({
+            success: false,
+        })
+    }
+
+    const file = req.files.file
+
+    //check if it's a photo
+    if(!file.mimetype.startsWith('image')){
+        return res.status(400).json({
+            success: false,
+            msg: 'Not an image: Please upload an image file'
+        })
+    }
+
+    //check file size
+    if(file.size > process.env.MAX_FILE_SIZE){
+        return res.status(400).json({
+            success: false,
+            msg: `File should be less than ${MAX_FILE_SIZE}bytes in size`
+        })
+    }
+
+    file.name = `${destination._id}_photo${path.parse(file.name).ext}`
+
+    file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async err=>{
+        if(err){
+            console.error(err)
+            return res.status(500).json(
+                {
+                    success: false,
+                    msg: 'Problem with file upload'
+                }
+            )
+        }
+
+        await Destination.findByIdAndUpdate(req.params.id, {photo: file.name})
+
+        res.status(200).json({
+            success: true,
+            data: file.name
+        })
+    })
+
+
+
 
     
 }

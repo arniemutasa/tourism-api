@@ -1,7 +1,9 @@
+const path = require('path')
 const express = require('express')
 const dotenv = require('dotenv')
 const morgan = require('morgan')
 const connectDB = require('./config/db')
+const fileupload = require('express-fileupload')
 const errorHandler = require('./middleware/error')
 
 
@@ -24,6 +26,12 @@ connectDB()
 //JSON Body Parser
 app.use(express.json())
 
+//File Uploads
+app.use(fileupload())
+
+//Set static folder
+app.use(express.static(path.join(__dirname,'public')))
+
 //Mount Routers
 app.use('/api/v1/destinations', destinations)
 app.use('/api/v1/categories', categories)
@@ -33,6 +41,7 @@ app.use('/api/v1/activities', activities)
 //Middleware
 app.use(morgan('tiny'))
 app.use(errorHandler)
+
 
 const PORT = process.env.PORT || 5000
 
