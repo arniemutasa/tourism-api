@@ -1,4 +1,6 @@
 const User = require('../models/user')
+const sendEmail = require('../utils/sendEmail')
+const crypto = require('crypto')
 
 
 
@@ -108,4 +110,85 @@ exports.getLoggedInUser = async (req, res, next) => {
         success: true,
         data: user
     })
+}
+
+// Forgot Password
+// GET /forgotpassword
+// Public Access
+exports.forgotPassword = async (req, res, next) => {
+
+    // get user from email 
+    let user = await User.findOne({email: req.body.email})
+
+    if(!user){
+        return res.status(404).json({
+            success: false,
+            message: `User with email ${req.body.email} does not exist`
+        })
+    }
+
+    //Get reset token
+    const resetToken = user.getResetPasswordToken()
+
+    await user.save({ validateBeforeSave: false })
+
+    const resetUrl = `${req.protocol}://${req.get('host')}/resetpassword/${resetToken}`
+
+    const options = {
+        email: user.email,
+        subject: 'Reset Your Password',
+        message: `Follow this link ${resetUrl} to reset your password`
+
+    }
+
+    try {
+        await sendEmail(options)
+        res.status(200).json({
+            success: true,
+            data: user
+        })
+    } catch (error) {
+        user.resetPasswordToken = undefined
+        user.resetPasswordTokenExpiry = undefined
+
+        await user.save({ validateBeforeSave: false })
+
+        res.status(500).json({
+            success: false,
+            message: error
+        })
+        
+    }
+    
+
+    
+}
+
+
+// Reset Password
+// PUT /resetpassword
+// Public Access
+exports.resetPassword = async (req, res, next) => {
+
+    const hashedToken = crypto.createHash('sha256').update(req.params.resettoken).digest('hex')
+    
+    let user = await User.findOne({
+        resetPasswordToken: hashedToken
+    })
+
+    if(!user){
+        res.status(400).json({
+            success: false,
+            message: 'Invalid Token'
+        })
+    }
+
+    user.password = req.body.password
+    user.resetPasswordToken = undefined
+    user.resetPasswordTokenExpiry = undefined
+    await user.save()
+
+    sendTokenResponse(user, 200, res)
+
+    
 }
