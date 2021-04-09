@@ -4,7 +4,8 @@ const {getCategory, getCategories, createCategory} = require('../controllers/cat
 
 const router = express.Router()
 
+const { protect, authorize } = require('../middleware/auth')
 
-router.route('/').get(getCategories).post(createCategory)
+router.route('/').get(getCategories).post(protect, authorize('publisher','admin'), createCategory)
 
 module.exports = router

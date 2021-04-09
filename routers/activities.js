@@ -7,9 +7,11 @@ const { getActivities, getActivity, createActivity, updateActivity, deleteActivi
 
 const router = express.Router({mergeParams: true})
 
+const { protect, authorize } = require('../middleware/auth')
 
 
-router.route('/').get(getActivities).post(createActivity)
-router.route('/:id').get(getActivity).delete(deleteActivity).put(updateActivity)
+router.route('/').get(getActivities).post(protect, authorize('publisher','admin'), createActivity)
+router.route('/:id').get(getActivity).delete(protect, authorize('publisher','admin'), deleteActivity)
+.put(protect, authorize('publisher','admin'), updateActivity)
 
 module.exports = router

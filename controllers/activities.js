@@ -60,6 +60,9 @@ exports.getActivity = async (req, res, next) => {
 // POST /api/v1/activities
 // Admin Access
 exports.createActivity = async (req, res, next) => {
+
+    //add user to request body
+    req.body.user = req.user.id
     
     const destination = await Destination.findById(req.body.destination)
 
@@ -91,7 +94,8 @@ exports.createActivity = async (req, res, next) => {
 // Admin Access
 exports.updateActivity = async (req, res, next) => {
 
-    const activity = await Activity.findByIdAndUpdate(req.params.id)
+    let activity = await Activity.findById(req.params)
+
     
     if(!activity){
         return res.status(404).json({
@@ -99,6 +103,16 @@ exports.updateActivity = async (req, res, next) => {
             data: 'Activity not updated'
         })
     }
+
+    // check if user is the owner or an admin user
+    if(activity.user.toString() !== req.user.id && req.user.role !== 'admin'){
+        return res.status(401).json({
+            success: false,
+            message: 'Not authorized'
+        })
+    }
+
+    activity = await Activity.findByIdAndUpdate(req.params.id)
 
     res.status(200).json({
         success: true,
@@ -110,7 +124,7 @@ exports.updateActivity = async (req, res, next) => {
 // DELETE /api/v1/activities/:id
 // Admin Access
 exports.deleteActivity = async (req, res, next) => {
-    const activity = await Activity.findByIdAndRemove(req.params.id)
+    let activity = await Activity.findById(req.params.id)
     
     if(!activity){
         return res.status(500).json({
@@ -118,6 +132,17 @@ exports.deleteActivity = async (req, res, next) => {
             data: 'Activity not found'
         })
     }
+
+    // check if user is the owner or an admin user
+    if(activity.user.toString() !== req.user.id && req.user.role !== 'admin'){
+        return res.status(401).json({
+            success: false,
+            message: 'Not authorized'
+        })
+    }
+
+    activity = await Activity.findByIdAndRemove(req.params.id)
+
 
     res.status(200).json({
         success: true,

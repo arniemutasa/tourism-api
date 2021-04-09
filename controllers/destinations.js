@@ -60,7 +60,11 @@ exports.getDestination = async (req, res, next) => {
 // POST /api/v1/destinations
 // ADMIN ACCESS
 exports.createDestination = async (req, res, next) => {
-   
+
+    //Add user to the request body
+    req.body.user = req.user.id
+
+       
     try{
         const destination = await Destination.create(req.body)
         res.status(201).json({success: true, data: destination})
@@ -80,7 +84,18 @@ exports.deleteDestination = async (req, res, next) => {
     }
    
     try{
-        const destination = await Destination.findByIdAndRemove(req.params.id)
+        let destination = await Destination.findById(req.params.id)
+
+        // check if user is the owner or an admin user
+        if(destination.user.toString() !== req.user.id && req.user.role !== 'admin'){
+            return res.status(401).json({
+                success: false,
+                message: 'Not authorized'
+            })
+        }
+
+        destination = await Destination.findByIdAndRemove(req.params.id)
+
 
         if(!destination){
             return res.status(404).send('could not delete destination')
@@ -105,21 +120,28 @@ exports.updateDestination = async (req, res, next) => {
     if(!category){
         return res.status(400).send('invalid category')
     }
+
+
    
     try{
-        let destination = await Destination.findByIdAndUpdate(req.params.id, {
-            name: req.body.name,
-            description: req.body.description,
-            slug: req.body.slug,
-            category: req.body.category,
-            website: req.body.website,
-            phone: req.body.phone,
-            email: req.body.email,
-            address: req.body.address,
-            photo: req.body.photo,
-            rating: req.body.rating,
-            reviews: req.body.reviews,
-        }, {
+        let destination = await Destination.findById(req.params.id)
+
+        if(!destination){
+            return res.status(404).json({
+                success: false,
+                message: 'Destination not found'
+            })
+        }
+
+        // check if user is the owner or an admin user
+        if(destination.user.toString() !== req.user.id && req.user.role !== 'admin'){
+            return res.status(401).json({
+                success: false,
+                message: 'Not authorized'
+            })
+        }
+
+        destination = await Destination.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true
         })
@@ -174,6 +196,14 @@ exports.uploadDestinationPhoto = async (req, res, next) => {
 
     if(!destination){
         return res.status(404).send('destination not found')
+    }
+
+    // check if user is the owner or an admin user
+    if(destination.user.toString() !== req.user.id && req.user.role !== 'admin'){
+        return res.status(401).json({
+            success: false,
+            message: 'Not authorized'
+        })
     }
 
     if(!req.files){
