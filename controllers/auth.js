@@ -192,3 +192,54 @@ exports.resetPassword = async (req, res, next) => {
 
     
 }
+
+
+
+// Update user
+// PUT /me/updatedetails
+// Private
+exports.updateUserDetails = async (req, res, next) => {
+
+    const fieldsToUpdate = {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email
+    }
+
+    const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate,{
+        new: true,
+        runValidators: false
+    })
+
+    res.status(200).json({
+        success: true,
+        data: user
+    })
+}
+
+
+// Update user password
+// PUT /me/updatepassword
+// Private
+exports.updatePassword = async (req, res, next) => {
+
+    
+    const user = await User.findById(req.user.id).select('+password')
+
+    // Check if new password matches old password
+
+    if(!(await user.matchPassword(req.body.currentPassword))){
+        return res.status(404).json({
+            success: false,
+            message: 'Incorrect Password'
+        })
+    }
+
+    // update password
+    user.password = req.body.newPassword
+    await user.save()
+
+    sendTokenResponse(user, 200, res)
+
+    
+}
