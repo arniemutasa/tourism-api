@@ -12,6 +12,7 @@ const errorHandler = require('./middleware/error')
 const destinations = require('./routers/destinations')
 const categories = require('./routers/categories')
 const activities = require('./routers/activities')
+const users = require('./routers/users')
 const auth = require('./routers/auth')
 
 
@@ -41,6 +42,7 @@ app.use(express.static(path.join(__dirname,'public')))
 app.use('/api/v1/destinations', destinations)
 app.use('/api/v1/categories', categories)
 app.use('/api/v1/activities', activities)
+app.use('/api/v1/users', users)
 app.use('', auth)
 
 
