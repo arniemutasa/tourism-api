@@ -39,7 +39,7 @@ const reviewSchema = new mongoose.Schema({
 
 
 //limits one user to one review per desination/activity
-reviewSchema.index({ destination: 1, user:1 }, {unique: true})
+// reviewSchema.index({ destination: 1, user:1 }, {unique: true})
 reviewSchema.index({ activity: 1, user:1 }, {unique: true})
 
 

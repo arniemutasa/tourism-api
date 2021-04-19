@@ -183,7 +183,7 @@ exports.addReviewToDestination = async (req, res, next)=>{
 
 
 // Adds new review
-// POST /api/v1/destinations/:destinationId/reviews
+// POST /api/v1/activity/:activityId/reviews
 // Private Access
 exports.addReviewToActivity = async (req, res, next)=>{
     req.body.activity = req.params.activityId
@@ -212,5 +212,81 @@ exports.addReviewToActivity = async (req, res, next)=>{
         data: review
     })
 
+
+}
+
+
+
+// Update single review
+// PUT /api/v1/reviews/:id
+// Private Access
+exports.updateReview = async (req, res, next) =>{
+    let review = await Review.findById(req.params.id).populate({
+        path: 'destination activity',
+        select: 'name description'
+    })
+
+    console.log(review.user.toString())
+
+
+    if(!review){
+        return res.status(404).json({
+            success: false,
+            message: 'No Reviews Found'
+        })
+    }
+
+    if(review.user.toString() !== req.user.id && req.user.role !== 'Admin'){
+        return res.status(401).json({
+            success: false,
+            message: 'Access Denied'
+        })
+    }
+
+    review = await Review.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true
+    })
+
+    res.status(200).json({
+        success:true,
+        data: review
+    })
+
+}
+
+
+
+
+// Delete single review
+// PUT /api/v1/reviews/:id
+// Private Access
+exports.deleteReview = async (req, res, next) =>{
+    const review = await Review.findById(req.params.id).populate({
+        path: 'destination activity',
+        select: 'name description'
+    })
+
+
+    if(!review){
+        return res.status(404).json({
+            success: false,
+            message: 'No Reviews Found'
+        })
+    }
+
+    if(review.user.toString() !== req.user.id && req.user.role !== 'Admin'){
+        return res.status(401).json({
+            success: false,
+            message: 'Access Denied'
+        })
+    }
+
+    await review.remove()
+
+    res.status(200).json({
+        success:true,
+        data: review
+    })
 
 }
