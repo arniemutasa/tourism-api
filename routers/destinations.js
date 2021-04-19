@@ -8,6 +8,7 @@ const { getDestinations, getDestination, createDestination, getDestinationsWithi
 
 //Include Activities router for fetching activities belonging to destination
 const activitiesRouter = require('./activities')
+const reviewsRouter = require('./reviews')
 
 
 const router = express.Router();
@@ -21,6 +22,7 @@ const { protect, authorize } = require('../middleware/auth')
 
 // Re Route to activities router
 router.use('/:destinationId/activities', activitiesRouter)
+router.use('/:destinationId/reviews', reviewsRouter)
 
 router.route('/')
 .get(getDestinations)

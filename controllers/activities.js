@@ -56,6 +56,31 @@ exports.getActivity = async (req, res, next) => {
 }
 
 
+
+
+// Gets activity by cost
+// GET /api/v1/activites/cost/:cost
+// Public Access
+exports.getActivityByCost = async (req, res, next) => {
+    const activity = await Activity.find({
+        price: req.params.cost
+    }).populate('destination')
+    
+    if(!activity){
+        return res.status('400').json({
+            success: false,
+            data: 'Activity not found'
+        })
+    }
+
+    res.status(200).json({
+        success: true,
+        data: activity
+    })
+
+}
+
+
 // Creates single activity
 // POST /api/v1/activities
 // Admin Access
