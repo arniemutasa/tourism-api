@@ -6,10 +6,9 @@ const { protect } = require('../middleware/auth')
 const router = express.Router()
 
 
-router.route('/').get(reviews).post(addReviewToDestination)
+router.route('/').get(protect, reviews).post(protect, addReviewToDestination)
 router.route('/:id').get(getReview).put(protect, updateReview).delete(protect, deleteReview)
 router.route('/destination/:destinationId').get(getDestinationReviews).post(protect, addReviewToDestination)
 router.route('/activity/:activityId').get(getActivityReviews).post(protect, addReviewToActivity)
-
 
 module.exports = router
